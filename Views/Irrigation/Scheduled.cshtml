@@ -44,7 +44,8 @@
             <th>
                 Duration
             </th>
-            
+            <th>
+            </th>
         </tr>
     </thead>
 </table>
@@ -196,7 +197,6 @@
 	};
 
     function OnSuccess(response) {
-        console.log(response)
         if (response.errorMessages) {
             DisplayErrors(response.errorMessages)
         }
@@ -229,9 +229,32 @@
 						return data + "min";
 					}
 				},
+                {
+					data: 'id',
+                        render: function (data, type, row) {
+                            return '<a onClick="deleteSchedule()" type="button" id=\''+data+'\' class="btn btn-danger deleteSchedule" style="color:#fff !important;">Delete</button>'
+                        }
+				}
 			]
 		});
 	}
+
+    const deleteSchedule = () => {
+        const scheduleId = document.querySelector(".deleteSchedule");
+
+        $.ajax({
+			type: "DELETE",
+			url: "/Irrigation/DeleteSchedule",
+			success: fetchData,
+            data: {id: scheduleId.id},
+			failure: function(response) {
+				alert(response);
+			},
+			error: function(response) {
+				alert(response);
+			}
+		});
+    }
 
     function DisplayErrors(errorMessages) {
 	    const div = document.getElementById('errorMessages');
