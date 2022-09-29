@@ -149,6 +149,24 @@ namespace IsIoTWeb.Controllers
             return View();
         }
 
+        public IActionResult Scheduled()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult GetSchedules()
+        {
+            try
+            {
+                return Json(_scheduleRepository.GetAll().Result.ToList());
+            }
+            catch (Exception)
+            {
+                return Json(new Error() { ErrorMessages = { "An error occured when fetching collectors' data!" } });
+            }
+        }
+
         [HttpPost]
         public async Task<JsonResult> WeatherData()
         {

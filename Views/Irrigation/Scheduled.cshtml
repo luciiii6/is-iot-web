@@ -1,0 +1,246 @@
+﻿<h3>Irrigation Schedule</h3>
+
+<div id="scheduleDiv">
+    <div>
+        <label>One Date</label>
+        <input type="checkbox" id="oneDateScheduleCheckbox" name="OneDateSchedule" checked />
+    </div>
+
+    <div id="oneDateScheduleDiv">
+        <label>In</label>
+        <input required type="date" class="input" id="oneDateSchedule" />
+    </div>
+
+    <div id="periodDateScheduleDiv">
+        <label>From</label>
+        <input required type="date" class="input" id="fromDateSchedule" />
+        <label>To</label>
+        <input required type="date" class="input" id="toDateSchedule" />
+    </div>
+
+    <div id="timeDurationScheduleUpperDiv">
+        <div id="newTimeDuration">
+            <label>At</label>
+            <input required type="time" class="input" id="oneTimeSchedule" />
+            <label>Duration</label>
+            <input required type="number" class="input" id="durationSchedule" />
+            <button id="pushDuration">Add</button>
+        </div>
+
+        <div id="timeDurations"></div>
+    </div>
+
+    <button class="btn btn-primary submit">Submit</button>
+</div>
+
+<br/>
+
+<table id="tableSchedules">
+    <thead>
+        <tr>
+            <th>
+                Date, time
+            </th>
+            <th>
+                Duration
+            </th>
+            
+        </tr>
+    </thead>
+</table>
+
+<link rel="stylesheet" href="~/css/time_list.css" />
+<link href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css" rel="stylesheet" type="text/css" />
+
+@section Scripts
+{
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#oneDateScheduleDiv").show();
+        $("#periodDateScheduleDiv").hide();
+        $("#timeIntervalScheduleDiv").show();
+        $('#oneDateScheduleCheckbox').click(function() {
+            if ($(this).is(":checked")) {
+                $("#oneDateScheduleDiv").show();
+                $("#periodDateScheduleDiv").hide();
+            } else {
+                $("#oneDateScheduleDiv").hide();
+                $("#periodDateScheduleDiv").show();
+            }
+        })
+
+        $("#timeDurationScheduleUpperDiv").show();
+
+    });
+
+    $(document).on("click", ".submit", function () {
+        oneTime = document.querySelector('#oneTimeSchedule').value
+        durationTime = document.querySelector('#durationSchedule').value
+        if(oneTime.length == 0 || durationTime.length == 0){
+            alert("Please enter valid irrigation time!")
+        }
+        else{
+            schedule = CreateSchedule()
+            if (schedule.entries == []) {
+                return
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/Irrigation/AddSchedule",
+                data: JSON.stringify(schedule),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(response) {
+                    console.log('succ add schedule')
+                    ClearInputs();
+                },
+                failure: function(response) {
+                    console.log('fail add schedule')
+                    alert(response);
+                },
+                error: function(response) {
+                    console.log('error add schedule')
+                    fetchData();
+                    ClearInputs();
+                }
+            });
+        }
+    })
+
+    function CreateSchedule() {
+	    var schedule = new Object();
+	    if ($("#oneDateScheduleCheckbox").is(":checked") === true) {
+		    schedule.fromDate = $("#oneDateSchedule").val()
+		    schedule.toDate = $("#oneDateSchedule").val()
+	    }
+	    else {
+		    schedule.fromDate = $("#fromDateSchedule").val()
+		    schedule.toDate = $("#toDateSchedule").val()
+	    }
+	
+	    schedule.entries = []
+	    durationDivs = document.querySelectorAll('#timeDurations > div');
+
+	    for(var i=0; i<durationDivs.length; i++){
+		    text = durationDivs[i].firstElementChild.innerText;
+            groups = text.match("^(\\d\\d:\\d\\d) => (\\d+) minutes$")
+            entry = Object()
+		    entry.time = groups[1]
+            entry.duration = parseInt(groups[2])
+            schedule.entries.push(entry)
+	    }
+
+	    return schedule
+    }
+
+    function ClearInputs(id, action) {
+        var current_time_durations = document.querySelectorAll(".delete");
+        for(var i=0; i<current_time_durations.length; i++){
+            current_time_durations[i].parentNode.remove()
+        }
+    }
+
+    function DisplayErrors(errorMessages) {
+	    const div = document.getElementById('errorMessages');
+        div.innerHTML = "" ;
+        errorMessages.forEach(message => div.innerHTML += '<p>' + message + '</p>');
+    }
+
+    document.querySelector('#pushDuration').onclick = function(){
+        oneTime = document.querySelector('#oneTimeSchedule').value
+        durationTime = document.querySelector('#durationSchedule').value
+        if(oneTime.length == 0 || durationTime.length == 0){
+            alert("Please enter valid irrigation time!")
+        }
+        else{
+            document.querySelector('#timeDurations').innerHTML += `
+                <div class="timeDuration">
+                    <span class="timeDurationEntry">
+                        ${document.querySelector('#oneTimeSchedule').value} => ${document.querySelector('#durationSchedule').value} minutes 
+                    </span>
+                    <button class="delete">
+                        \u00D7
+                    </button>
+                </div>
+            `;}
+
+            var current_time_durations = document.querySelectorAll(".delete");
+            for(var i=0; i<current_time_durations.length; i++){
+                current_time_durations[i].onclick = function(){
+                    this.parentNode.remove();
+                }
+            }
+        }
+    
+
+	function fetchData() {
+		$.ajax({
+			type: "POST",
+			url: "/Irrigation/GetSchedules",
+			data: null,
+			contentType: "application/json; charset=utf-8",
+			dataType: "json",
+			success: OnSuccess,
+			failure: function(response) {
+                console.log('error get schedule')
+				alert(response.d);
+			},
+			error: function(response) {
+                console.log('error get schedule')
+				alert(response.d);
+			}
+		});
+	};
+
+    function OnSuccess(response) {
+        console.log(response)
+        if (response.errorMessages) {
+            DisplayErrors(response.errorMessages)
+        }
+
+		$("#tableSchedules").DataTable({
+			destroy: true,
+			bLengthChange: true,
+			lengthMenu: [[5, 10, 25, -1], [5, 10, 25, "All"]],
+			bFilter: true,
+			bSort: true,
+			stateSave: true,
+			bPaginate: true,
+			searching: false,
+			order: [
+				[1, 'desc']
+			],
+			data: response,
+			columns: [
+				{
+					data: 'timestamp',
+					render: function(data, type, row) {
+						if (type === "sort")
+							return data;
+						return moment.unix(data).format("DD/MM/YYYY, HH:mm:ss");
+					}
+				},
+				{
+					data: 'duration',
+					render: function(data, type, row) {
+						return data + "min";
+					}
+				},
+			]
+		});
+	}
+
+    function DisplayErrors(errorMessages) {
+	    const div = document.getElementById('errorMessages');
+        div.innerHTML = "" ;
+        errorMessages.forEach(message => div.innerHTML += '<p>' + message + '</p>');
+    }
+
+    $(document).ready(function() {		
+		fetchData();
+    });
+</script>
+}
