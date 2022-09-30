@@ -14,11 +14,13 @@ namespace IsIoTWeb.Controllers
     {
         private IUserRepository _userRepository;
         private IRoleRepository _roleRepository;
+        private ISinkRepository _sinkRepository;
 
-        public UsersController(IUserRepository userRepository, IRoleRepository roleRepository)
+        public UsersController(IUserRepository userRepository, IRoleRepository roleRepository, ISinkRepository sinkRepository)
         {
             _userRepository = userRepository;
             _roleRepository = roleRepository;
+            _sinkRepository = sinkRepository;
         }
 
         public IActionResult Index() => View();
@@ -91,7 +93,17 @@ namespace IsIoTWeb.Controllers
                 try
                 {
                     errors = await _userRepository.Create(userCreateInput);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", ex.Message);
+                    return View(userCreateInput);
+                }
 
+                try
+                {
+                    var user = _userRepository.GetByUsername(userCreateInput.Username);
+                    await _sinkRepository.AddUser(user.Id.ToString());
                 }
                 catch (Exception ex)
                 {

@@ -1,5 +1,6 @@
 ﻿using IsIoTWeb.Context;
 using IsIoTWeb.Models;
+using IsIoTWeb.Utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
@@ -12,11 +13,13 @@ namespace IsIoTWeb.Repository
     {
         protected readonly IMongoDbContext _context;
         protected IMongoCollection<TDocument> _collection;
-        
+        protected IMongoCollection<Sink> _sinkCollection;
+
         protected BaseRepository(IMongoDbContext context, string collectionName)
         {
             _context = context;
             _collection = _context.GetCollection<TDocument>(collectionName);
+            _sinkCollection = _context.GetCollection<Sink>("sinks");
         }
 
         public virtual async Task Create(TDocument obj)
@@ -35,7 +38,7 @@ namespace IsIoTWeb.Repository
 
         public virtual async Task Update(TDocument obj)
         {
-            await _collection.ReplaceOneAsync(Builders<TDocument>.Filter.Eq("_id", obj.Id), obj);
+            await _collection.ReplaceOneAsync(Builders<TDocument>.Filter.Eq("_id", new ObjectId(obj.Id)), obj);
         }
 
         public virtual async Task<TDocument> Get(string id)
@@ -49,6 +52,24 @@ namespace IsIoTWeb.Repository
         {
             var all = await _collection.FindAsync(Builders<TDocument>.Filter.Empty);
             return await all.ToListAsync();
+        }
+
+        public async Task<ICollection<string>> GetCurrentCollectorIds()
+        {
+            var sink = await GetSink();
+            return sink.Collectors;
+        }
+
+        public async Task<Sink> GetSink()
+        {
+            FilterDefinition<Sink> filter = Builders<Sink>.Filter.Eq("sinkId", StaticVariables.SinkId);
+            return await _sinkCollection.FindAsync(filter).Result.FirstOrDefaultAsync();
+        }
+
+        public async Task<ICollection<string>> GetCurrentUserIds()
+        {
+            var sink = await GetSink();
+            return sink.Users;
         }
     }
 }

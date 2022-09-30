@@ -1,4 +1,8 @@
-﻿<h3>Irrigation Schedule</h3>
+﻿@model IEnumerable<IsIoTWeb.Models.Reading>
+
+<h3>Irrigation Schedule</h3>
+
+<div id="errorMessages"></div>
 
 <div id="scheduleDiv">
     <div>
@@ -46,6 +50,7 @@
             </th>
             <th>
             </th>
+
         </tr>
     </thead>
 </table>
@@ -95,15 +100,12 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('succ add schedule')
                     ClearInputs();
                 },
                 failure: function(response) {
-                    console.log('fail add schedule')
                     alert(response);
                 },
                 error: function(response) {
-                    console.log('error add schedule')
                     fetchData();
                     ClearInputs();
                 }
@@ -186,11 +188,9 @@
 			dataType: "json",
 			success: OnSuccess,
 			failure: function(response) {
-                console.log('error get schedule')
 				alert(response.d);
 			},
 			error: function(response) {
-                console.log('error get schedule')
 				alert(response.d);
 			}
 		});
@@ -235,11 +235,11 @@
                             return '<a onClick="deleteSchedule()" type="button" id=\''+data+'\' class="btn btn-danger deleteSchedule" style="color:#fff !important;">Delete</button>'
                         }
 				}
-			]
+                			]
 		});
 	}
 
-    const deleteSchedule = () => {
+        const deleteSchedule = () => {
         const scheduleId = document.querySelector(".deleteSchedule");
 
         $.ajax({

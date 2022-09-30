@@ -4,6 +4,7 @@ using IsIoTWeb.Models.Schedule;
 using IsIoTWeb.Models.Valve;
 using IsIoTWeb.Mqtt;
 using IsIoTWeb.Repository;
+using IsIoTWeb.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -134,7 +135,7 @@ namespace IsIoTWeb.Controllers
             try
             {
                 RequestStatus();
-                await _mqttClient.Subscribe("/valves/status/response/");
+                await _mqttClient.Subscribe($"/{StaticVariables.SinkId}/valves/status/response/");
             }
             catch (Exception)
             {
@@ -162,11 +163,11 @@ namespace IsIoTWeb.Controllers
         {
             try
             {
-                return Json(_scheduleRepository.GetAll().Result.ToList());
+                return Json(_scheduleRepository.GetAll().Result);
             }
             catch (Exception)
             {
-                return Json(new Error() { ErrorMessages = { "An error occured when fetching collectors' data!" } });
+                return Json(new Error() { ErrorMessages = { "An error occured when fetching schedules' data!" } });
             }
         }
 
@@ -310,7 +311,7 @@ namespace IsIoTWeb.Controllers
 
             try
             {
-                await _mqttClient.Publish($"/valves/control/", JsonConvert.SerializeObject(valveAction, new JsonSerializerSettings
+                await _mqttClient.Publish($"/{StaticVariables.SinkId}/valves/control/", JsonConvert.SerializeObject(valveAction, new JsonSerializerSettings
                 {
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 }));
@@ -377,7 +378,7 @@ namespace IsIoTWeb.Controllers
 
                 try
                 {
-                    await _mqttClient.Publish($"/valves/control/", JsonConvert.SerializeObject(valveAction, new JsonSerializerSettings
+                    await _mqttClient.Publish($"/{StaticVariables.SinkId}/valves/control/", JsonConvert.SerializeObject(valveAction, new JsonSerializerSettings
                     {
                         ContractResolver = new CamelCasePropertyNamesContractResolver()
                     }));
@@ -441,7 +442,7 @@ namespace IsIoTWeb.Controllers
         {
             try
             {
-                await _mqttClient.Publish($"/valves/status/request/", "{}");
+                await _mqttClient.Publish($"/{StaticVariables.SinkId}/valves/status/request/", "{}");
             }
             catch (Exception)
             {

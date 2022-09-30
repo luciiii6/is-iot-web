@@ -1,4 +1,6 @@
 ﻿using IsIoTWeb.Models;
+using IsIoTWeb.Repository;
+using IsIoTWeb.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +14,13 @@ namespace IsIoTWeb.Controllers
     {
         private UserManager<User> userManager;
         private SignInManager<User> signInManager;
+        private ISinkRepository _sinkRepository;
 
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, ISinkRepository sinkRepository)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
+            _sinkRepository = sinkRepository;
         }
 
         public IActionResult Login()
@@ -34,9 +38,11 @@ namespace IsIoTWeb.Controllers
                 try
                 {
                     User appUser = await userManager.FindByNameAsync(username);
-                    if (appUser != null)
+                    var sinkId = await _sinkRepository.GetIdByUser(appUser);
+                    if (appUser != null && sinkId != null)
                     {
                         Microsoft.AspNetCore.Identity.SignInResult result = await signInManager.PasswordSignInAsync(appUser, password, false, false);
+                        StaticVariables.SinkId = sinkId;
                         if (result.Succeeded)
                         {
                             return Redirect("/");
@@ -73,6 +79,7 @@ namespace IsIoTWeb.Controllers
                 ModelState.AddModelError("Unexpected error", "An unexpected error occured. Please contact the administrator.");
             }
 
+            StaticVariables.SinkId = null;
             return RedirectToAction("Index", "Home");
         }
     }

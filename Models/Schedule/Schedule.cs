@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using IsIoTWeb.Utils;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace IsIoTWeb.Models.Schedule
@@ -14,5 +15,8 @@ namespace IsIoTWeb.Models.Schedule
 
         [BsonElement("duration")]
         public double Duration { get; set; }
+
+        [BsonElement("sinkId")]
+        public string SinkId { get; set; } = StaticVariables.SinkId;
     }
 }

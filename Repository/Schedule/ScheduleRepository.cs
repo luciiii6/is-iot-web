@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using IsIoTWeb.Context;
 using IsIoTWeb.Models.Schedule;
 using MongoDB.Bson;
@@ -12,6 +13,18 @@ namespace IsIoTWeb.Repository
 
         public ScheduleRepository(IMongoDbContext context) : base(context, CollectionName)
         {
+        }
+
+        private async Task<FilterDefinition<Schedule>> BuildDefaultFilter()
+        {
+            var sink = await GetSink();
+            return Builders<Schedule>.Filter.Eq("sinkId", sink.SinkId);
+        }
+
+        public override async Task<IEnumerable<Schedule>> GetAll()
+        {
+            var filter = await BuildDefaultFilter();
+            return await _collection.Find(filter).ToListAsync();
         }
 
         public virtual async Task Delete(ObjectId id)

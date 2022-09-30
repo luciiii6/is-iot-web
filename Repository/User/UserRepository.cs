@@ -1,6 +1,8 @@
 ﻿using IsIoTWeb.Context;
 using IsIoTWeb.Models;
 using Microsoft.AspNetCore.Identity;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,9 +18,27 @@ namespace IsIoTWeb.Repository
             _userManager = userManager;
         }
 
+        private async Task<FilterDefinition<User>> BuildDefaultFilter()
+        {
+            var ids = await GetCurrentUserIds();
+            List<ObjectId> objectIds = new List<ObjectId>();
+            foreach(var id in ids)
+            {
+                objectIds.Add(new ObjectId(id));
+            }
+            return Builders<User>.Filter.In("_id", objectIds);
+        }
+
         public async Task<User> GetLoggedUserByUsername(string username)
         {
             return await _userManager.FindByNameAsync(username);
+        }
+
+
+        public User GetByUsername(string username)
+        {
+            var filter = Builders<User>.Filter.Eq("Username", username);
+            return _collection.Find(filter).First();
         }
 
         public override async Task Delete(string id)
@@ -30,6 +50,12 @@ namespace IsIoTWeb.Repository
         public override async Task<User> Get(string id)
         {
             return await _userManager.FindByIdAsync(id);
+        }
+
+        public override async Task<IEnumerable<User>> GetAll()
+        {
+            var filter = await BuildDefaultFilter();
+            return await _collection.Find(filter).ToListAsync();
         }
 
         public async Task<List<string>> Create(UserCreateInput userInputModel)
