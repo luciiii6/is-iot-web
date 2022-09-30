@@ -9,5 +9,7 @@ namespace IsIoTWeb.Repository
         Task<User> GetLoggedUserByUsername(string username);
         Task<List<string>> Create(UserCreateInput userInputModel);
         Task<List<string>> Update(UserUpdateInput userInputModel);
+
+        User GetByUsername(string username);
     }
 }

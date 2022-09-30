@@ -27,10 +27,16 @@ namespace IsIoTWeb.Repository
             await Task.CompletedTask;
         }
 
+        private async Task<FilterDefinition<Reading>> BuildDefaultFilter()
+        {
+            var ids = await GetCurrentCollectorIds();
+            return Builders<Reading>.Filter.In("collectorId", ids);
+        }
+
         public async Task<IEnumerable<Reading>> GetAllByFilter(ReadingFilter filter)
         {
             var descending = Builders<Reading>.Sort.Descending("timestamp");
-            var mongoFilter = Builders<Reading>.Filter.Empty;
+            var mongoFilter = await BuildDefaultFilter();
             int pageSize = 1000;
 
             if (filter != null)

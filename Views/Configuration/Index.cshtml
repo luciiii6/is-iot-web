@@ -1,0 +1,136 @@
+﻿@model IEnumerable<IsIoTWeb.Models.Reading>
+
+<h3>Configuration</h3>
+
+<br />
+<div id="errorMessages"></div>
+<fieldset>
+    <legend>Add collector</legend>
+
+    <div>
+	    <input type="text" id="addCollectorInput" class="input"/>
+    </div>
+    <br />
+    <button type="button" class="btn btn-primary" onClick="addCollector()">Add</button>
+</fieldset>
+<br />
+<table id="tableCollectors">
+    <thead>
+        <tr>
+            <th>
+                CollectorId
+            </th>
+            <th>
+            </th>
+        </tr>
+    </thead>
+</table>
+
+<link rel="stylesheet" href="~/css/time_list.css" />
+<link href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css" rel="stylesheet" type="text/css" />
+
+@section Scripts
+{
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min.js"></script>
+<script type="text/javascript">
+    const addCollector = () => {
+        const collectorId = document.getElementById("addCollectorInput").value;
+
+        $.ajax({
+            type: "POST",
+            url: "/Configuration/AddCollector",
+            data: {id: collectorId},
+            success: function(response) {
+				fetchData();
+            },
+            failure: function(response) {
+                alert(response);
+            },
+            error: function(response) {
+				alert(response)
+            }
+        });
+    }
+
+    function fetchData() {
+		$.ajax({
+			type: "POST",
+			url: "/Configuration/GetCollectors",
+			data: null,
+			contentType: "application/json; charset=utf-8",
+			dataType: "json",
+			success: OnSuccess,
+			failure: function(response) {
+				alert(response.d);
+			},
+			error: function(response) {
+				alert(response.d);
+			}
+		});
+	};
+
+    function OnSuccess(response) {
+        if (response.errorMessages) {
+            DisplayErrors(response.errorMessages)
+        }
+
+		ids = response.map(id => {
+			return {'collectorId': id};
+		})
+
+		$("#tableCollectors").DataTable({
+			destroy: true,
+			bLengthChange: true,
+			lengthMenu: [[5, 10, 25, -1], [5, 10, 25, "All"]],
+			bFilter: true,
+			bSort: true,
+			stateSave: true,
+			bPaginate: true,
+			searching: false,
+			order: [
+				[1, 'desc']
+			],
+			data: ids,
+			columns: [
+				{
+					data: 'collectorId'
+				},
+                {
+					data: 'collectorId',
+                        render: function (data, type, row) {
+                            return '<a onClick="deleteCollector()" type="button" id=\''+data+'\' class="btn btn-danger deleteCollector" style="color:#fff !important;">Delete</button>'
+                        }
+				}
+			]
+		});
+	}
+	function DisplayErrors(errorMessages) {
+	    const div = document.getElementById('errorMessages');
+        div.innerHTML = "" ;
+        errorMessages.forEach(message => div.innerHTML += '<p>' + message + '</p>');
+    }
+
+    $(document).ready(function() {		
+		fetchData();
+    });
+
+	const deleteCollector = () => {
+        const collectorId = document.querySelector(".deleteCollector");
+
+        $.ajax({
+			type: "DELETE",
+			url: "/Configuration/DeleteCollector",
+			success: fetchData,
+            data: {id: collectorId.id},
+			failure: function(response) {
+				alert(response);
+			},
+			error: function(response) {
+				alert(response);
+			}
+		});
+    }
+
+</script>
+}

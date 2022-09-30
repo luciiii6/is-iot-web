@@ -26,7 +26,7 @@ namespace IsIoTWeb
         public void ConfigureServices(IServiceCollection services)
         {
             var mongoDbSettings = Configuration.GetSection("MongoDbSettings");
-
+            services.AddSession();
             services.Configure<MongoDbSettings>(mongoDbSettings);
             services.AddSingleton<IMongoDbSettings>(service => service.GetRequiredService<IOptions<MongoDbSettings>>().Value);
             services.Configure<MqttSettings>(Configuration.GetSection("MqttSettings"));
@@ -37,6 +37,7 @@ namespace IsIoTWeb
                     mongoDbSettings["ConnectionString"],
                     mongoDbSettings["DatabaseName"]
                 );
+            services.AddScoped<ISinkRepository, SinkRepository>();
             services.AddScoped<IReadingRepository, ReadingRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IRoleRepository, RoleRepository>();
@@ -65,10 +66,9 @@ namespace IsIoTWeb
 
             app.UseRouting();
 
-
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseSession();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(

@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using IsIoTWeb.Utils;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace IsIoTWeb.Models
@@ -21,6 +22,9 @@ namespace IsIoTWeb.Models
         [BsonElement("userId")]
         [BsonRepresentation(BsonType.ObjectId)]
         public string UserId { get; set; }
+
+        [BsonElement("sinkId")]
+        public string SinkId { get; set; } = StaticVariables.SinkId;
 
         public string Date()
         {

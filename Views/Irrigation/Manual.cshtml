@@ -34,45 +34,11 @@
     </thead>
 </table>
 <hr />
-<h3>Irrigation Schedule</h3>
-
-<div id="scheduleDiv">
-    <div>
-        <label>One Date</label>
-        <input type="checkbox" id="oneDateScheduleCheckbox" name="OneDateSchedule" checked />
-    </div>
-
-    <div id="oneDateScheduleDiv">
-        <label>In</label>
-        <input type="date" class="input" id="oneDateSchedule" />
-    </div>
-
-    <div id="periodDateScheduleDiv">
-        <label>From</label>
-        <input type="date" class="input" id="fromDateSchedule" />
-        <label>To</label>
-        <input type="date" class="input" id="toDateSchedule" />
-    </div>
-
-    <div id="timeDurationScheduleUpperDiv">
-        <div id="newTimeDuration">
-            <label>At</label>
-            <input type="time" class="input" id="oneTimeSchedule" />
-            <label>Duration</label>
-            <input type="number" class="input" id="durationSchedule" />
-            <button id="pushDuration">Add</button>
-        </div>
-
-        <div id="timeDurations"></div>
-    </div>
-
-    <br/>
-
-    <button class="btn btn-primary submit">Submit</button>
-</div>
 
 <link rel="stylesheet" href="~/css/time_list.css" />
 <link href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css" rel="stylesheet" type="text/css"/>
+
+
 @section Scripts
 {
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
@@ -220,116 +186,4 @@
     }
 </script>
 
-<script type="text/javascript">
-    $(document).ready(function() {
-        $("#oneDateScheduleDiv").show();
-        $("#periodDateScheduleDiv").hide();
-        $("#timeIntervalScheduleDiv").show();
-        $('#oneDateScheduleCheckbox').click(function() {
-            if ($(this).is(":checked")) {
-                $("#oneDateScheduleDiv").show();
-                $("#periodDateScheduleDiv").hide();
-            } else {
-                $("#oneDateScheduleDiv").hide();
-                $("#periodDateScheduleDiv").show();
-            }
-        })
-
-        $("#timeDurationScheduleUpperDiv").show();
-
-    });
-
-    $(document).on("click", ".submit", function () {
-        schedule = CreateSchedule()
-        if (schedule.entries == []) {
-            return
-        }
-
-        $.ajax({
-            type: "POST",
-            url: "/Irrigation/AddSchedule",
-            data: JSON.stringify(schedule),
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function(response) {
-                ClearInputs()
-            },
-            failure: function(response) {
-                alert(response.d);
-            },
-            error: function(response) {
-                alert(response.d);
-            }
-        });
-    })
-
-    function CreateSchedule() {
-	    var schedule = new Object();
-	    if ($("#oneDateScheduleCheckbox").is(":checked") === true) {
-		    schedule.fromDate = $("#oneDateSchedule").val()
-		    schedule.toDate = $("#oneDateSchedule").val()
-	    }
-	    else {
-		    schedule.fromDate = $("#fromDateSchedule").val()
-		    schedule.toDate = $("#toDateSchedule").val()
-	    }
-	
-	    schedule.entries = []
-	    durationDivs = document.querySelectorAll('#timeDurations > div');
-
-	    for(var i=0; i<durationDivs.length; i++){
-		    text = durationDivs[i].firstElementChild.innerText;
-            groups = text.match("^(\\d\\d:\\d\\d) => (\\d+) minutes$")
-            entry = Object()
-		    entry.time = groups[1]
-            entry.duration = parseInt(groups[2])
-            schedule.entries.push(entry)
-	    }
-
-	    return schedule
-    }
-
-    function ClearInputs(id, action) {
-        var current_time_durations = document.querySelectorAll(".delete");
-        for(var i=0; i<current_time_durations.length; i++){
-            current_time_durations[i].parentNode.remove()
-        }
-    }
-
-    function DisplayErrors(errorMessages) {
-	    const div = document.getElementById('errorMessages');
-        div.innerHTML = "" ;
-        errorMessages.forEach(message => div.innerHTML += '<p>' + message + '</p>');
-    }
-
-    document.querySelector('#pushDuration').onclick = function(){
-        oneTime = document.querySelector('#oneTimeSchedule').value
-        durationTime = document.querySelector('#durationSchedule').value
-        if(oneTime.length == 0 || durationTime.length == 0){
-            alert("Please enter valid irrigation time!")
-        }
-        if(durationTime <= 0) {
-            alert("Irrigation time should be higher than 0!")
-        }
-        else{
-            document.querySelector('#timeDurations').innerHTML += `
-                <div class="timeDuration">
-                    <span class="timeDurationEntry">
-                        ${document.querySelector('#oneTimeSchedule').value} => ${document.querySelector('#durationSchedule').value} minutes 
-                    </span>
-                    <button class="delete">
-                        \u00D7
-                    </button>
-                </div>
-            `;
-
-            var current_time_durations = document.querySelectorAll(".delete");
-            for(var i=0; i<current_time_durations.length; i++){
-                current_time_durations[i].onclick = function(){
-                    this.parentNode.remove();
-                }
-            }
-        }
-    }
-</script>
 }  

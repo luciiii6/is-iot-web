@@ -9,16 +9,22 @@ namespace IsIoTWeb.Repository
 {
     public class ValveRepository : BaseRepository<ValveLog>, IValveRepository
     {
-        private const string CollectionName = "valves";
+        private const string CollectionName = "valves_sid";
 
         public ValveRepository(IMongoDbContext context) : base(context, CollectionName)
         {
         }
 
+        private async Task<FilterDefinition<ValveLog>> BuildDefaultFilter()
+        {
+            var sink = await GetSink();
+            return Builders<ValveLog>.Filter.Eq("sinkId", sink.SinkId);
+        }
+
         public async Task<IEnumerable<ValveLog>> GetAllByFilter(ValveLogsFilter filter)
         {
             var descending = Builders<ValveLog>.Sort.Descending("timestamp");
-            var mongoFilter = Builders<ValveLog>.Filter.Empty;
+            var mongoFilter = await BuildDefaultFilter();
             int pageSize = 1000;
 
             if (filter != null)

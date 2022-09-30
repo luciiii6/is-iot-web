@@ -1,5 +1,6 @@
 ﻿using IsIoTWeb.Context;
 using IsIoTWeb.Models;
+using IsIoTWeb.Utils;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
@@ -9,15 +10,22 @@ namespace IsIoTWeb.Repository
 {
     public class IrrigationRepository : BaseRepository<IrrigationLog>, IIrrigationRepository
     {
-        private const string CollectionName = "irrigations";
+        private const string CollectionName = "irrigations_sid";
 
         public IrrigationRepository(IMongoDbContext context) : base(context, CollectionName)
         {
         }
+
+        private async Task<FilterDefinition<IrrigationLog>> BuildDefaultFilter()
+        {
+            var sink = await GetSink();
+            return Builders<IrrigationLog>.Filter.Eq("sinkId", sink.SinkId);
+        }
+
         public async Task<IEnumerable<IrrigationLog>> GetAllByFilter(IrrigationLogsFilter filter)
         {
             var descending = Builders<IrrigationLog>.Sort.Descending("timestamp");
-            var mongoFilter = Builders<IrrigationLog>.Filter.Empty;
+            var mongoFilter = await BuildDefaultFilter();
             int pageSize = 1000;
 
             if (filter != null)

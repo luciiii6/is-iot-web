@@ -11,5 +11,7 @@ namespace IsIoTWeb.Repository
         Task Delete(string id);
         Task<TDocument> Get(string id);
         Task<IEnumerable<TDocument>> GetAll();
+
+        Task<Sink> GetSink();
     }
 }
